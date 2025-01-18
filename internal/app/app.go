@@ -1,40 +1,47 @@
-package main
+package app
 
 import (
-	"embed"
 	"encoding/json"
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/gofrs/uuid"
-	app "github.com/okamyuji/Todo/internal/app"
 )
 
-//go:embed internal/app/templates/* internal/app/static/js/*
-var content embed.FS
+type Todo struct {
+	ID        string     `json:"id"`
+	Title     string     `json:"title"`
+	Category  string     `json:"category"`
+	Priority  int        `json:"priority"`
+	Done      bool       `json:"done"`
+	CreatedAt time.Time  `json:"created_at"`
+	DoneAt    *time.Time `json:"done_at,omitempty"`
+}
 
-func main() {
-	state := &app.AppState{
-		Todos: make([]app.Todo, 0),
-	}
+type Analytics struct {
+	TotalTodos     int            `json:"total_todos"`
+	CompletedTodos int            `json:"completed_todos"`
+	CompletionRate float64        `json:"completion_rate"`
+	AverageTime    float64        `json:"average_time"`
+	CategoryCounts map[string]int `json:"category_counts"`
+	PriorityCounts map[int]int    `json:"priority_counts"`
+}
 
-	r := chi.NewRouter()
+type AppState struct {
+	Todos []Todo
+	Mu    sync.RWMutex
+}
+
+func RegisterRoutes(r chi.Router, state *AppState, tmpl *template.Template) {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	// 静的ファイルの提供
-	fileServer := http.FileServer(http.FS(content))
-	r.Handle("/internal/app/static/*", fileServer)
-
-	// HTMLテンプレート
-	tmpl := template.Must(template.ParseFS(content, "internal/app/templates/*.html"))
-
-	// ルート
+	// HTMLテンプレートルート
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		state.Mu.RLock()
 		data := map[string]interface{}{
@@ -50,7 +57,7 @@ func main() {
 		}
 	})
 
-	// API エンドポイント
+	// APIルート
 	r.Route("/api", func(r chi.Router) {
 		r.Get("/todos", func(w http.ResponseWriter, r *http.Request) {
 			state.Mu.RLock()
@@ -60,7 +67,7 @@ func main() {
 		})
 
 		r.Post("/todos", func(w http.ResponseWriter, r *http.Request) {
-			var todo app.Todo
+			var todo Todo
 			if err := json.NewDecoder(r.Body).Decode(&todo); err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
@@ -105,7 +112,7 @@ func main() {
 			state.Mu.RLock()
 			defer state.Mu.RUnlock()
 
-			analytics := app.Analytics{
+			analytics := Analytics{
 				TotalTodos:     len(state.Todos),
 				CategoryCounts: make(map[string]int),
 				PriorityCounts: make(map[int]int),
@@ -138,7 +145,4 @@ func main() {
 			json.NewEncoder(w).Encode(analytics)
 		})
 	})
-
-	fmt.Println("Server starting at :8080")
-	log.Fatal(http.ListenAndServe(":8080", r))
 }
