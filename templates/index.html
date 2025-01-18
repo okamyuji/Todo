@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="/static/js/app.js" defer></script>
+</head>
+<body class="bg-gray-100">
+    <div id="app" class="container mx-auto px-4 py-8">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Todo Analytics Dashboard</h1>
+            <p class="text-gray-600 mt-2">Track and analyze your tasks efficiently</p>
+        </header>
+
+        <!-- Add Todo Form -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">Add New Todo</h2>
+            <form @submit.prevent="addTodo" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Title</label>
+                    <input v-model="newTodo.title" type="text" required
+                           class="mt-1 block w-full rounded-md border border-gray-300 p-2">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Category</label>
+                        <select v-model="newTodo.category" required
+                                class="mt-1 block w-full rounded-md border border-gray-300 p-2">
+                            <option value="Work">Work</option>
+                            <option value="Personal">Personal</option>
+                            <option value="Shopping">Shopping</option>
+                            <option value="Health">Health</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Priority</label>
+                        <select v-model="newTodo.priority" required
+                                class="mt-1 block w-full rounded-md border border-gray-300 p-2">
+                            <option :value="1">Low</option>
+                            <option :value="2">Medium</option>
+                            <option :value="3">High</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit"
+                        class="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+                    Add Todo
+                </button>
+            </form>
+        </div>
+
+        <!-- Analytics Dashboard -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold mb-4">Overview</h3>
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Total Tasks</span>
+                        <span v-text="analytics.total_todos" class="text-xl font-semibold"></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Completed</span>
+                        <span v-text="analytics.completed_todos" class="text-xl font-semibold text-green-600"></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Completion Rate</span>
+                        <span class="text-xl font-semibold" v-text="`${Math.round(analytics.completion_rate)}%`"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold mb-4">Completion Chart</h3>
+                <canvas id="completionChart"></canvas>
+            </div>
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold mb-4">Categories</h3>
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Todo List -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Todo List</h2>
+            <div class="space-y-4">
+                <div v-for="todo in sortedTodos" :key="todo.id"
+                     class="flex items-center justify-between p-4 border rounded-lg transition-colors duration-200"
+                     :class="{'bg-green-50': todo.done}">
+                    <div class="flex items-center space-x-4">
+                        <input type="checkbox" :checked="todo.done" @change="toggleTodo(todo.id)"
+                               class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                        <span :class="{'line-through text-gray-500': todo.done}"
+                              class="font-medium" v-text="todo.title"></span>
+                        <span class="text-sm text-gray-500" v-text="todo.category"></span>
+                        <span class="px-2 py-1 text-xs rounded-full"
+                            :class="{
+                                'bg-red-100 text-red-800': todo.priority === 3,
+                                'bg-yellow-100 text-yellow-800': todo.priority === 2,
+                                'bg-green-100 text-green-800': todo.priority === 1
+                            }"
+                            v-text="getPriorityLabel(todo.priority)">
+                        </span>
+                    </div>
+                    <div class="flex items-center space-x-4 text-sm text-gray-500">
+                        <span v-text="`Created: ${formatDate(todo.created_at)}`"></span>
+                        <span v-if="todo.done" v-text="`Completed: ${formatDate(todo.done_at)}`"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
