@@ -161,6 +161,46 @@ type Analytics struct {
 
 ## 開発ガイドライン
 
+### Usage
+
+#### ビルド
+
+```go
+$ go build
+```
+
+#### テスト
+
+```go
+> go test ./... --shuffle=on #テストの実行
+```
+
+#### linterやspell checker
+
+formatter, linter, spell checkerなどを実行します
+
+```shell
+> sh lint.sh
+```
+
+仕様については以下のコマンドにより確認してください
+
+```shell
+> sh lint.sh --help
+```
+
+なお、formatterやlinterが導入済みである必要があります。macOSユーザーであれば、全て以下のコマンドで導入可能です
+
+```shell
+> go install golang.org/x/tools/cmd/goimports@latest
+> go install honnef.co/go/tools/cmd/staticcheck@latest
+> brew install golangci-lint
+> brew install typos-cli
+> brew install codespell
+```
+
+Windowsユーザーの場合、`goimports`, `staticcheck`の導入には同じコマンドが使用できますが、`golangci-lint`, `typos`, `codespell`については公式サイトを参照してください([`golangci-lint`](https://golangci-lint.run/usage/install/#local-installation), [`typos`](https://github.com/crate-ci/typos#install), [`codespell`](https://github.com/codespell-project/codespell#installation))
+
 ### バックエンド開発
 
 - 新しいエンドポイントの追加は`main.go`のルーター設定に行う

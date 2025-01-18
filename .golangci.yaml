@@ -1,0 +1,67 @@
+linters:
+    disable-all: true
+    enable: #We selectively comment out some linters which are too verbose.
+        #`c.SendStatus(http.StatusBadRequest)` rather than `c.SendStatus(400)`
+        - usestdlibvars
+
+        #detects magic numbers
+        # - gomnd
+
+        #detects returned but ignored errors
+        - errcheck
+
+        #detects wrong error wrappings (e.g. `fmt.Errorf("%v", err)`)
+        # - errorlint
+
+        #detects incorrect use of `testify` package
+        - testifylint
+
+        #each helper function in testing should start with `t.Helper()`
+        - thelper
+
+        #detects redundant casts
+        - unconvert
+        #general-purpose linter
+        # - gocritic
+
+        #When the fields of a struct has two or more struct tags
+        # i int `json:"foo" validate:"required"`
+        # s string `json:"foo_bar" validate:"min=-1"`
+        #they should be aligned:
+        # i int `json:"foo"        validate:"required"`
+        # s string `json:"foo_bar" validate:"min=-1"`
+        #This lint is buggy when multibyte characters are included in tags.
+        # - tagalign
+
+        #detects unnecessary use of `fmt.Sprintf()`
+        #For example, `fmt.Sprintf("hello")` should be just `"hello"`.
+        - perfsprint
+
+        #detects unused parameters
+        - unparam
+
+issues:
+    exclude-rules:
+        - linters:
+              - perfsprint
+          text: "fmt.Sprintf can be replaced with faster strconv"
+
+        - linters:
+              - perfsprint
+          text: "fmt.Errorf can be replaced with errors.New"
+
+        - linters:
+              - perfsprint
+          text: "fmt.Sprintf can be replaced with string addition"
+
+        - linters:
+              - perfsprint
+          text: "fmt.Sprintf can be replaced with string concatenation"
+
+        - linters:
+              - unparam
+          text: "always receives"
+
+        - linters:
+              - unparam
+          text: "is always nil"
