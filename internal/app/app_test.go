@@ -14,6 +14,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	app "github.com/okamyuji/Todo/internal/app"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 //go:embed templates/*.html
@@ -51,8 +52,8 @@ func TestGetTodos(t *testing.T) {
 
 	var todos []app.Todo
 	err := json.NewDecoder(resp.Body).Decode(&todos)
-	assert.NoError(t, err)
-	assert.Equal(t, 1, len(todos))
+	require.NoError(t, err)
+	assert.Len(t, todos, 1)
 	assert.Equal(t, "Test Todo", todos[0].Title)
 }
 
@@ -75,7 +76,7 @@ func TestCreateTodo(t *testing.T) {
 
 	var createdTodo app.Todo
 	err := json.NewDecoder(resp.Body).Decode(&createdTodo)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "New Todo", createdTodo.Title)
 	assert.NotEmpty(t, createdTodo.ID)
 }
@@ -98,7 +99,7 @@ func TestToggleTodoStatus(t *testing.T) {
 
 	var updatedTodo app.Todo
 	err := json.NewDecoder(resp.Body).Decode(&updatedTodo)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.True(t, updatedTodo.Done)
 }
 
@@ -122,7 +123,7 @@ func TestAnalytics(t *testing.T) {
 
 	var analytics app.Analytics
 	err := json.NewDecoder(resp.Body).Decode(&analytics)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, 2, analytics.TotalTodos)
 	assert.Equal(t, 1, analytics.CompletedTodos)
 	assert.InDelta(t, 50.0, analytics.CompletionRate, 0.01)

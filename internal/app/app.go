@@ -63,7 +63,10 @@ func RegisterRoutes(r chi.Router, state *AppState, tmpl *template.Template) {
 			state.Mu.RLock()
 			defer state.Mu.RUnlock()
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(state.Todos)
+			if err := json.NewEncoder(w).Encode(state.Todos); err != nil {
+				http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+				return
+			}
 		})
 
 		r.Post("/todos", func(w http.ResponseWriter, r *http.Request) {
@@ -82,7 +85,10 @@ func RegisterRoutes(r chi.Router, state *AppState, tmpl *template.Template) {
 
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusCreated)
-			json.NewEncoder(w).Encode(todo)
+			if err := json.NewEncoder(w).Encode(todo); err != nil {
+				http.Error(w, "Failed to encode todo", http.StatusInternalServerError)
+				return
+			}
 		})
 
 		r.Put("/todos/{id}/toggle", func(w http.ResponseWriter, r *http.Request) {
@@ -101,7 +107,10 @@ func RegisterRoutes(r chi.Router, state *AppState, tmpl *template.Template) {
 						state.Todos[i].DoneAt = nil
 					}
 					w.Header().Set("Content-Type", "application/json")
-					json.NewEncoder(w).Encode(state.Todos[i])
+					if err := json.NewEncoder(w).Encode(state.Todos[i]); err != nil {
+						http.Error(w, "Failed to encode todo", http.StatusInternalServerError)
+						return
+					}
 					return
 				}
 			}
@@ -142,7 +151,10 @@ func RegisterRoutes(r chi.Router, state *AppState, tmpl *template.Template) {
 			}
 
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(analytics)
+			if err := json.NewEncoder(w).Encode(analytics); err != nil {
+				http.Error(w, "Failed to encode analytics", http.StatusInternalServerError)
+				return
+			}
 		})
 	})
 }
